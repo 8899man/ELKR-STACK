@@ -321,9 +321,9 @@ if [type]=="nginx:access" {
 
 ```
 [root@elk config]# ss -ltn|grep 8001
-LISTEN     0      128
+LISTEN     0      128        *:8001                     *:*
 ```
-                 *:8001                     *:*
+
 
 8. 部署filebeat，发送文件日志到logstash8001     
 为了避免filebeat无权限读取日志文件，建议以root身份启动filebeat      
