@@ -14,7 +14,9 @@ ELKR Stack 日志监控平台
 - Redis 监听127.0.0.1:6379  #因为不需要对外开放，可以不设置认证   
 - ES 监听127.0.0.1:9200  #集群节点先配置一个，后期再扩展成集群方式    
 
-对外统一提供Logstash监听的8001端口，用于接收各个Agent收集上来的日志。Redis负责中转，再交给Logstash做正则匹配，最后存储到ES集群，Kibana做分析统计展现。Nginx反向代理Kibana前端，保护Kibana非授权访问。
+对外统一提供Logstash监听的8001端口，用于接收各个Agent收集上来的日志。	
+Redis负责中转，再交给Logstash做正则匹配，最后存储到ES集群，Kibana做分析统计展现。	
+Nginx反向代理Kibana前端，保护Kibana非授权访问。
 
 ###  三、测试环境方案      
 硬件配置：  
@@ -23,7 +25,9 @@ CPU:8C
 RAM:16G     
 DISK:300G   
 
-因为网络环境复杂，下载ELK介质的速度又不行，我把个人收集的介质上传，请对比HASH合理食用。我建议如果是想做实验，有美利坚的VPS 1000M网络共享，下载速度感动到你哭。而且也支持在线安装各种插件。这个你在大TC想都不敢想。
+因为网络环境复杂，下载ELK介质的速度又不行，我把个人收集的介质上传，请对比HASH合理食用。	
+我建议如果是想做实验，有美利坚的VPS 1000M网络共享，下载速度感动到你哭。	
+而且也支持在线安装各种插件。这个你在大TC想都不敢想。
 
 ### 四、实施方案        
 1. 检查介质清单 
@@ -333,7 +337,8 @@ LISTEN     0      128
 
 
 ```
-以下配置：读取本机的/var/log/nginx/access.log，发送到logstash8001，且标记为document_type: "nginx:access"，这样便于存放到redis的不同list中。
+以下配置：读取本机的/var/log/nginx/access.log，发送到logstash8001，	
+且标记为document_type: "nginx:access"，这样便于存放到redis的不同list中。
 
 filebeat.prospectors:
 #  index: "filebeat:nginx"
@@ -390,9 +395,11 @@ HOSTPORT1 (%{IPV4}:%{POSINT}[, ]{0,2})+
 ```
 
 
-YourHostIP-N-ACCESS 与 HOSTPORT1为自定义表达式。为了能够编写匹配不同格式的nginx日志，需要定义不同的名字，所以采用YourHostIP-N-ACCESS这样的命名，后面会用到。HOSTPORT1表达式是为了匹配出 IP: PORT 这类型的数据，仅仅是个人需求。    
-提供一个正则表达式在线调试的网站GrokDebugger，国内访问可能会慢。
-
+YourHostIP-N-ACCESS 与 HOSTPORT1为自定义表达式。	
+为了能够编写匹配不同格式的nginx日志，需要定义不同的名字，所以采用YourHostIP-N-ACCESS这样的命名，后面会用到。	
+HOSTPORT1表达式是为了匹配出 IP: PORT 这类型的数据，仅仅是个人需求。    
+提供一个正则表达式在线调试的网站GrokDebugger，国内访问可能会慢。	
+[Grok Debugger](http://grokdebug.herokuapp.com/)
 ```
 #vim  /elkr/ls5.3.2/config/redis2es.conf
 ```
@@ -532,14 +539,16 @@ PUT _template/all-string-with-raw
   }
 ```
 
-10.3. 点击左边菜单Management->Index Patterns-> Configure an index pattern-> Index name or pattern处输入第9步配置文件    
+10.3. 点击左边菜单Management->Index Patterns-> Configure an index pattern-> 	
+Index name or pattern处输入第9步配置文件    
 
 ```
 index => "nginx-access-%{+YYYY.MM.dd}"
 ```
 中的index名，如我的例子中就应该是nginx-access-\*，因为索引会按天创建，所以请保留末尾的*。   
 
-10.4. 左边菜单Discover为定义的Index Pattern的展现，也是后面Visualize的数据基础，Visualize做出的图表，通过Dashboard展现。这样就完成了Kibana的视图设置，Kibana支持多种格式统计图表，可以深入挖掘使用。  
+10.4. 左边菜单Discover为定义的Index Pattern的展现，也是后面Visualize的数据基础，	
+Visualize做出的图表，通过Dashboard展现。这样就完成了Kibana的视图设置，Kibana支持多种格式统计图表，可以深入挖掘使用。  
 
 至此ELKR STACK搭建完毕。    
 其中耗时的地方在于正则表达式匹配日志。  
