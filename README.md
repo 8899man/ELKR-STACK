@@ -2,6 +2,7 @@
 
 ## 《ELKR STACK从入门到放弃》   
 ELKR Stack 日志监控平台     
+ ![image](https://raw.githubusercontent.com/n3uz/elkr-stack/master/kibana.jpg)
 ### 一、背景        
 日志多，零散。统一集中分析，挖掘攻击事件。自己去编吧
 
@@ -632,7 +633,7 @@ index => "nginx-access-%{+YYYY.MM.dd}"
 
   左边菜单Discover为定义的Index Pattern的展现，也是后面Visualize的数据基础，	
 Visualize做出的图表，通过Dashboard展现。这样就完成了Kibana的视图设置，Kibana支持多种格式统计图表，可以深入挖掘使用。 
- ![image](https://raw.githubusercontent.com/n3uz/elkr-stack/master/kibana.jpg)
+
 
 至此ELKR STACK搭建完毕。    
 其中耗时的地方在于正则表达式匹配日志。  
