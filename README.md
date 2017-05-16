@@ -1,9 +1,7 @@
 <font face="微软雅黑"> 
 
 ## 《ELKR STACK从入门到放弃》   
-ELKR Stack 日志监控平台
- ![image](https://raw.githubusercontent.com/n3uz/elkr-stack/master/kibana.jpg)
- 
+ELKR Stack 日志监控平台     
 ### 一、背景        
 日志多，零散。统一集中分析，挖掘攻击事件。自己去编吧
 
@@ -45,22 +43,24 @@ ELKR Stack 日志监控平台
 
 创建目录elkr，上传所有包到/elkr     
 
-```
-#mkdir -p /elkr/ 
+```bash
+mkdir -p /elkr/ 
 ```
     
 2. 部署工作环境，调优系统参数       
 
-```
+```bash
 yum -y install gcc tcl
 ```
-设置java环境变量    
-```
-#tar zxvf jdk.tar.gz
-#vi /etc/profile
+
+设置java环境变量
+
+```bash
+tar zxvf jdk.tar.gz
+vi /etc/profile
 ```
 
-```
+```bash
   export JAVA_HOME=/elkr/jdk18
   export CLASSPATH=$JAVA_HOME/libs/dt.jar:$JAVA_HOME/tools.jar
   export PATH=$PATH:$JAVA_HOME/bin/
@@ -68,13 +68,13 @@ yum -y install gcc tcl
 
 确保java工作正常
 
-```
+```bash
 java -verison
 ```
 
 调整内核参数
 
-```
+```bash
 vi /etc/security/limits.conf
 ```
 
@@ -87,16 +87,16 @@ vi /etc/security/limits.conf
   * hard memlock 65536
 ```
 
-```
-#echo 'vm.max_map_count = 262144' >> /etc/sysctl.conf
-#echo 'vm.overcommit_memory = 1' >> /etc/sysctl.conf
-#sysctl -p
+```bash
+echo 'vm.max_map_count = 262144' >> /etc/sysctl.conf
+echo 'vm.overcommit_memory = 1' >> /etc/sysctl.conf
+sysctl -p
 ```
 
 
 3. 安装redis3.2.6版本为例   
 
-```
+```bash
 tar zxvf redis3.2.6.tar.gz
 mv redis3.2.6 redis
 make MALLOC=libc v=1
@@ -104,22 +104,22 @@ make test
 make install
 ```
 
-```
+```bash
 vi /etc/rc.local
 ```
 
-```
+```bash
 echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
 ```
 
 
 编辑配置文件
 
-```
+```bash
 vi /etc/redis.conf
 ```
 
-```
+```bash
   bind 127.0.0.1 #因为不需要对外提供服务，所以监听本地即可，方便后面不设置密码访问
   protected-mode no
   port 6379
@@ -177,29 +177,29 @@ vi /etc/redis.conf
 
 启动redis
 
-```
+```bash
 redis-server /etc/redis.conf
 ```
 
 验证redis是否可用
 
-```
-#redis-cli 
-#127.0.0.1:6379> keys *
+```bash
+redis-cli 
+127.0.0.1:6379> keys *
 ```
 
 验证Redis安装配置成功
 
 4. 部署ES   
 
-```
-#unzip elasticsearch-5.3.2.zip
-#mv elasticsearch-5.3.2 es5.3.2
-#cd es5.3.2
-#vi config/elasticsearch.yml
+```bash
+unzip elasticsearch-5.3.2.zip
+mv elasticsearch-5.3.2 es5.3.2
+cd es5.3.2
+vi config/elasticsearch.yml
 ```
 
-```
+```bash
     cluster.name: Your_cluster_name
     node.name: Node-1
     path.data: /elkr/es5.3.2/data
@@ -208,8 +208,8 @@ redis-server /etc/redis.conf
 
 修改jvm参数，根据实际情况配置，建议两个一样。其他参数保持默认
 
-```
-#vi jvm.options
+```bash
+vi jvm.options
 ```
 
 ```
@@ -219,10 +219,12 @@ redis-server /etc/redis.conf
 
 启动ES
 
+```bash
+/elkr/es5.3.2/bin/elasticsearch -d
 ```
-#/elkr/es5.3.2/bin/elasticsearch -d
-```
+
 验证ES工作正常
+
 ```
 [root@elk config]# curl -XGET "http://localhost:9200"
 {
@@ -244,14 +246,14 @@ redis-server /etc/redis.conf
 
 5. 部署Kibana   
 
-```
-#tar zxvf kibana-5.3.2-linux-x86_64.tar.gz
-#mv kibana-5.3.2-linux-x86_64 kibana
-#cd kibana
-#vim config/kibana.yml
+```bash
+tar zxvf kibana-5.3.2-linux-x86_64.tar.gz
+mv kibana-5.3.2-linux-x86_64 kibana
+cd kibana
+vim config/kibana.yml
 ```
 
-```
+```bash
     server.port: 5601
     server.host: "localhost"
     elasticsearch.url: "http://localhost:9200"
@@ -263,34 +265,34 @@ redis-server /etc/redis.conf
 
 启动kibana
 
-```
-#/elkr/kibana/bin/kibana
+```bash
+/elkr/kibana/bin/kibana
 ```
 
 启动kibana脚本
 
-```
-#vi start-kibana.sh
+```bash
+vi start-kibana.sh
 ```
 
-```
+```bash
 nohup /elkr/kibana/bin/kibana </dev/null &>/dev/null &
 ```
 检查kibana启动是否成功
 
-```
-#netstat -an|grep 5601
+```bash
+netstat -an|grep 5601
 ```
 
 
 6. 安装nginx配置代理
 在线yum安装nginx
 
-```
-#vim /etc/yum.repo/nginx.repo
+```bash
+vim /etc/yum.repo/nginx.repo
 ```
 
-```
+```bash
   [nginx]
   name=nginx repo
   baseurl=http://nginx.org/packages/centos/7/$basearch/
@@ -298,19 +300,19 @@ nohup /elkr/kibana/bin/kibana </dev/null &>/dev/null &
   enabled=1
 ```
 
-```  
-#yum -y install nginx
+```bash
+yum -y install nginx
 ```
 
 
 使用nginx代理与配置密码验证 
 
 
-```
-#vi /etc/nginx/conf.d/default.conf
+```bash
+vi /etc/nginx/conf.d/default.conf
 ```
 
-```
+```bash
 server { 
 listen 80; 
     server_name localhost; 
@@ -331,24 +333,24 @@ listen 80;
 htpasswd 在线生成 ,[戳我传送](http://tool.oschina.net/htpasswd)  
 检查配置，启动nginx     
 
-```
-#nginx -t
-#nginx
+```bash
+nginx -t
+nginx
 ```
 
 访问http://IP，输入上面设置的htpasswd的用户名密码登录，测试正常。   
 
 7. 部署Logstash 监听8001端口，用于接收日志，并转发到redis
 
-```
-#tar zxvf logstash-5.3.2.tar.gz
-#mv logstash-5.3.2 logstash
-#cd logstash
+```bash
+tar zxvf logstash-5.3.2.tar.gz
+mv logstash-5.3.2 logstash
+cd logstash
 ```
 
 
 ```
-#vim config/conf-8001.conf
+vim config/conf-8001.conf
 ```
 
 
@@ -375,8 +377,8 @@ if [type]=="nginx:access" {
 
 启动logstash    
 
-```
-#nohup /elkr/ls5.3.2/bin/logstash -f /elkr/ls5.3.2/config/filebeat.conf -l /elkr/ls5.3.2/log/filebeat/ &
+```bash
+nohup /elkr/ls5.3.2/bin/logstash -f /elkr/ls5.3.2/config/filebeat.conf -l /elkr/ls5.3.2/log/filebeat/ &
 ```
 
 查看启动日志与端口，确认启动正常。  
@@ -392,10 +394,10 @@ LISTEN     0      128  *:8001                     *:*
 为了避免filebeat无权限读取日志文件，请为相应的日志文件赋予可读权限      
 
 ```
-#su - root
-#tar zxvf filebeat-5.3.2-linux-x86_64.tar.gz
-#mv filebeat-5.3.2 filebeat
-#vim filebeat.yml
+su - root
+tar zxvf filebeat-5.3.2-linux-x86_64.tar.gz
+mv filebeat-5.3.2 filebeat
+vim filebeat.yml
 ```
 
 ```
@@ -416,7 +418,7 @@ output.logstash:
 启动filebeat    
 
 ```
-# /elkr/filebeat/filebeat -e -c /elkr/filebeat/filebeat.yml &
+/elkr/filebeat/filebeat -e -c /elkr/filebeat/filebeat.yml &
 ```
 
 连接到redis服务器，确认redis工作正常    
@@ -435,20 +437,20 @@ output.logstash:
 建立用来存放Grok正则表达式文件的路径    
 
 ```
-#mkdir -p /elkr/ls5.3.2/patterns
+mkdir -p /elkr/ls5.3.2/patterns
 ```
 
 将grok_patterns文件，与自定义pattern文件存放在此目录  
 
 ```
-#vim /elkr/ls5.3.2/patterns/grok_patterns
+vim /elkr/ls5.3.2/patterns/grok_patterns
 ```
 
 预定义表达式见：[grok_patterns](https://grokdebug.herokuapp.com/patterns)       
 
 以下为自定义nginx access日志正则匹配  
 ```
-#vim /elkr/ls5.3.2/patterns/nginx-access
+vim /elkr/ls5.3.2/patterns/nginx-access
 ```
 
 
@@ -464,7 +466,7 @@ HOSTPORT1表达式是为了匹配出 IP: PORT 这类型的数据，仅仅是个�
 一个正则表达式在线调试的网站GrokDebugger，国内访问可能会慢。	
 [Grok Debugger](http://grokdebug.herokuapp.com/)
 ```
-#vim  /elkr/ls5.3.2/config/redis2es.conf
+vim  /elkr/ls5.3.2/config/redis2es.conf
 ```
 
 
@@ -630,7 +632,7 @@ index => "nginx-access-%{+YYYY.MM.dd}"
 
   左边菜单Discover为定义的Index Pattern的展现，也是后面Visualize的数据基础，	
 Visualize做出的图表，通过Dashboard展现。这样就完成了Kibana的视图设置，Kibana支持多种格式统计图表，可以深入挖掘使用。 
-
+ ![image](https://raw.githubusercontent.com/n3uz/elkr-stack/master/kibana.jpg)
 
 至此ELKR STACK搭建完毕。    
 其中耗时的地方在于正则表达式匹配日志。  
@@ -674,6 +676,13 @@ curl -XDELETE http://localhost:9200/*
 ```
 
 那么你猜我索引有没有删除 :hear_no_evil:
+
+2. logstash grok并没有你想的那么高效
+
+在处理单条日志内容过大时，我的大概2k，grok的效率简直不能忍，新手又没有其他姿势来切分匹配。朋友建议说使用其他的行处理工具，这里还要埋个坑
+
+3. 待发现
+
 
 </font>
 
