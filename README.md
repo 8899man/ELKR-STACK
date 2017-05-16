@@ -1,63 +1,69 @@
-<font face="微软雅黑">    
+<font face="微软雅黑"> 
 
 ## 《ELKR STACK从入门到放弃》   
-ELKR Stack 日志监控平台     
+ELKR Stack 日志监控平台
+ ![image](https://raw.githubusercontent.com/n3uz/elkr-stack/master/kibana.jpg)
+ 
 ### 一、背景        
 日志多，零散。统一集中分析，挖掘攻击事件。自己去编吧
+
 ###  二、架构与流程     
 ![image](https://github.com/n3uz/elkr-stack/blob/master/ELKR%E6%9E%B6%E6%9E%84%E5%9B%BE%E4%B8%8E%E6%B5%81%E7%A8%8B.png?raw=true) 
 
-
-- Nginx 监听0.0.0.0 80 #配置htpasswd认证方式  
+- Nginx 监听0.0.0.0 80 #配置htpasswd身份认证方式  
 - Logstash 监听0.0.0.0:8001 #负责接收各个Beat发送的数据   
 - Kibana 监听127.0.0.1:5601 #本地监听，不安装x-pack   
 - Redis 监听127.0.0.1:6379  #因为不需要对外开放，可以不设置认证   
 - ES 监听127.0.0.1:9200  #集群节点先配置一个，后期再扩展成集群方式    
 
-对外统一提供Logstash监听的8001端口，用于接收各个Agent收集上来的日志。	
-Redis负责中转，再交给Logstash做正则匹配，最后存储到ES集群，Kibana做分析统计展现。	
-Nginx反向代理Kibana前端，保护Kibana非授权访问。
+对外统一提供Logstash监听的8001端口，用于接收各个Agent收集上来的日志。多加个logstash在前面监听8001，是把Redis保护起来，你设置个密码访问Redis吧，又得在收集日志的客户端配置上redis的访问密码，容易泄漏。Redis负责中转，再交给Logstash做正则匹配，最后存储到ES集群，Kibana做分析统计展现。Nginx反向代理Kibana。
 
-###  三、测试环境方案      
-硬件配置：  
-CentOS7     
-CPU:8C  
-RAM:16G     
-DISK:300G   
+###  三、测试环境方案     
+硬件配置：   
+
+- CentOS7     
+- CPU:8C  
+- RAM:16G     
+- DISK:300G   
 
 因为网络环境复杂，下载ELK介质的速度又不行，我把个人收集的介质上传，请对比HASH合理食用。	
 我建议如果是想做实验，有美利坚的VPS 1000M网络共享，下载速度感动到你哭。	
 而且也支持在线安装各种插件。这个你在大TC想都不敢想。
 
 ### 四、实施方案        
-1. 检查介质清单 
-- CentOS Linux release 7.1.1503 (Core)或其他    
-- jdk1.8    
-- Elasticsearch5.3.2    
-- Logstash5.3.2 
-- Kibana5.3.2   
-- Filebeat5.3.2 
-- Redis3.2.6    
-- Nginx1.10 yum安装     
+1. 检查介质清单    
+
+  - CentOS Linux release 7.1.1503 (Core)或其他    
+  - jdk1.8    
+  - Elasticsearch5.3.2    
+  - Logstash5.3.2 
+  - Kibana5.3.2   
+  - Filebeat5.3.2 
+  - Redis3.2.6    
+  - Nginx1.10 yum安装     
 所有介质打包下载 [百度网盘地址]()    TODO
 
 创建目录elkr，上传所有包到/elkr     
 
 ```
-mkdir -p /elkr/ 
+#mkdir -p /elkr/ 
 ```
     
-2. 部署工作环境，调优系统参数   
+2. 部署工作环境，调优系统参数       
 
 ```
 yum -y install gcc tcl
 ```
 设置java环境变量    
-  vi /etc/profile
 ```
-export JAVA_HOME=/elkr/jdk18
-export CLASSPATH=$JAVA_HOME/libs/dt.jar:$JAVA_HOME/tools.jar
-export PATH=$PATH:$JAVA_HOME/bin/
+#tar zxvf jdk.tar.gz
+#vi /etc/profile
+```
+
+```
+  export JAVA_HOME=/elkr/jdk18
+  export CLASSPATH=$JAVA_HOME/libs/dt.jar:$JAVA_HOME/tools.jar
+  export PATH=$PATH:$JAVA_HOME/bin/
 ```
 
 确保java工作正常
@@ -68,18 +74,23 @@ java -verison
 
 调整内核参数
 
-
 ```
 vi /etc/security/limits.conf
-* soft nofile 65536
-* hard nofile 65536
-* soft process 65536
-* hard process 65536
-* soft memlock 65536
-* hard memlock 65536
-echo 'vm.max_map_count = 262144' >> /etc/sysctl.conf
-echo 'vm.overcommit_memory = 1' >> /etc/sysctl.conf
-sysctl -p
+```
+
+```
+  * soft nofile 65536
+  * hard nofile 65536
+  * soft process 65536
+  * hard process 65536
+  * soft memlock 65536
+  * hard memlock 65536
+```
+
+```
+#echo 'vm.max_map_count = 262144' >> /etc/sysctl.conf
+#echo 'vm.overcommit_memory = 1' >> /etc/sysctl.conf
+#sysctl -p
 ```
 
 
@@ -91,68 +102,77 @@ mv redis3.2.6 redis
 make MALLOC=libc v=1
 make test
 make install
+```
 
+```
 vi /etc/rc.local
+```
+
+```
 echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
 ```
 
 
 编辑配置文件
+
 ```
 vi /etc/redis.conf
-bind 127.0.0.1 #因为不需要对外提供服务，所以监听本地即可，方便后面不设置密码访问
-protected-mode no
-port 6379
-tcp-backlog 511
-timeout 0
-tcp-keepalive 300
-daemonize yes
-supervised no
-pidfile /var/run/redis_6379.pid
-loglevel notice
-logfile "/elkr/redis/redis.log" #log路径目录，需要提前创建
-databases 16
-save 900 1
-save 300 10
-save 60 10000
-stop-writes-on-bgsave-error yes
-rdbcompression yes
-rdbchecksum yes
-dbfilename dump.rdb
-dir ./
-slave-serve-stale-data yes
-slave-read-only yes
-repl-diskless-sync no
-repl-diskless-sync-delay 5
-repl-disable-tcp-nodelay no
-slave-priority 100
-requirepass Passw0rd
-appendonly no
-appendfilename "appendonly.aof"
-appendfsync everysec
-no-appendfsync-on-rewrite no
-auto-aof-rewrite-percentage 100
-auto-aof-rewrite-min-size 64mb
-aof-load-truncated yes
-lua-time-limit 5000
-slowlog-log-slower-than 10000
-slowlog-max-len 128
-latency-monitor-threshold 0
-notify-keyspace-events ""
-hash-max-ziplist-entries 512
-hash-max-ziplist-value 64
-list-max-ziplist-size -2
-list-compress-depth 0
-set-max-intset-entries 512
-zset-max-ziplist-entries 128
-zset-max-ziplist-value 64
-hll-sparse-max-bytes 3000
-activerehashing yes
-client-output-buffer-limit normal 0 0 0
-client-output-buffer-limit slave 256mb 64mb 60
-client-output-buffer-limit pubsub 32mb 8mb 60
-hz 10
-aof-rewrite-incremental-fsync yes
+```
+
+```
+  bind 127.0.0.1 #因为不需要对外提供服务，所以监听本地即可，方便后面不设置密码访问
+  protected-mode no
+  port 6379
+  tcp-backlog 511
+  timeout 0
+  tcp-keepalive 300
+  daemonize yes
+  supervised no
+  pidfile /var/run/redis_6379.pid
+  loglevel notice
+  logfile "/elkr/redis/redis.log" #log路径目录，需要提前创建
+  databases 16
+  save 900 1
+  save 300 10
+  save 60 10000
+  stop-writes-on-bgsave-error yes
+  rdbcompression yes
+  rdbchecksum yes
+  dbfilename dump.rdb
+  dir ./
+  slave-serve-stale-data yes
+  slave-read-only yes
+  repl-diskless-sync no
+  repl-diskless-sync-delay 5
+  repl-disable-tcp-nodelay no
+  slave-priority 100
+  requirepass Passw0rd
+  appendonly no
+  appendfilename "appendonly.aof"
+  appendfsync everysec
+  no-appendfsync-on-rewrite no
+  auto-aof-rewrite-percentage 100
+  auto-aof-rewrite-min-size 64mb
+  aof-load-truncated yes
+  lua-time-limit 5000
+  slowlog-log-slower-than 10000
+  slowlog-max-len 128
+  latency-monitor-threshold 0
+  notify-keyspace-events ""
+  hash-max-ziplist-entries 512
+  hash-max-ziplist-value 64
+  list-max-ziplist-size -2
+  list-compress-depth 0
+  set-max-intset-entries 512
+  zset-max-ziplist-entries 128
+  zset-max-ziplist-value 64
+  hll-sparse-max-bytes 3000
+  activerehashing yes
+  client-output-buffer-limit normal 0 0 0
+  client-output-buffer-limit slave 256mb 64mb 60
+  client-output-buffer-limit pubsub 32mb 8mb 60
+  hz 10
+  aof-rewrite-incremental-fsync yes
 ```
 
 启动redis
@@ -164,11 +184,11 @@ redis-server /etc/redis.conf
 验证redis是否可用
 
 ```
-redis-cli 
-127.0.0.1:6379> keys *
+#redis-cli 
+#127.0.0.1:6379> keys *
 ```
 
-验证成功
+验证Redis安装配置成功
 
 4. 部署ES   
 
@@ -177,14 +197,20 @@ redis-cli
 #mv elasticsearch-5.3.2 es5.3.2
 #cd es5.3.2
 #vi config/elasticsearch.yml
+```
 
+```
     cluster.name: Your_cluster_name
     node.name: Node-1
     path.data: /elkr/es5.3.2/data
     path.logs: /elkr/es5.3.2/logs
 ```
 
-修改jvm参数，根据实际情况配置，建议两个一样。
+修改jvm参数，根据实际情况配置，建议两个一样。其他参数保持默认
+
+```
+#vi jvm.options
+```
 
 ```
 -Xms4g
@@ -196,6 +222,24 @@ redis-cli
 ```
 #/elkr/es5.3.2/bin/elasticsearch -d
 ```
+验证ES工作正常
+```
+[root@elk config]# curl -XGET "http://localhost:9200"
+{
+  "name" : "node-1",
+  "cluster_name" : "CA-ES-STACK",
+  "cluster_uuid" : "6AXF-GcjROKB43RQ0F9XZg",
+  "version" : {
+    "number" : "5.3.2",
+    "build_hash" : "3068195",
+    "build_date" : "2017-04-24T16:15:59.481Z",
+    "build_snapshot" : false,
+    "lucene_version" : "6.4.2"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+```
 
 
 5. 部署Kibana   
@@ -205,6 +249,9 @@ redis-cli
 #mv kibana-5.3.2-linux-x86_64 kibana
 #cd kibana
 #vim config/kibana.yml
+```
+
+```
     server.port: 5601
     server.host: "localhost"
     elasticsearch.url: "http://localhost:9200"
@@ -224,7 +271,15 @@ redis-cli
 
 ```
 #vi start-kibana.sh
+```
+
+```
 nohup /elkr/kibana/bin/kibana </dev/null &>/dev/null &
+```
+检查kibana启动是否成功
+
+```
+#netstat -an|grep 5601
 ```
 
 
@@ -233,11 +288,17 @@ nohup /elkr/kibana/bin/kibana </dev/null &>/dev/null &
 
 ```
 #vim /etc/yum.repo/nginx.repo
-[nginx]
-name=nginx repo
-baseurl=http://nginx.org/packages/centos/7/$basearch/
-gpgcheck=0
-enabled=1
+```
+
+```
+  [nginx]
+  name=nginx repo
+  baseurl=http://nginx.org/packages/centos/7/$basearch/
+  gpgcheck=0
+  enabled=1
+```
+
+```  
 #yum -y install nginx
 ```
 
@@ -247,7 +308,9 @@ enabled=1
 
 ```
 #vi /etc/nginx/conf.d/default.conf
+```
 
+```
 server { 
 listen 80; 
     server_name localhost; 
@@ -265,8 +328,7 @@ listen 80;
 ```
 
 
-htpasswd 在线生成   
-http://tool.oschina.net/htpasswd  
+htpasswd 在线生成 ,[戳我传送](http://tool.oschina.net/htpasswd)  
 检查配置，启动nginx     
 
 ```
@@ -321,12 +383,13 @@ if [type]=="nginx:access" {
 
 ```
 [root@elk config]# ss -ltn|grep 8001
-LISTEN     0      128        *:8001                     *:*
+LISTEN     0      128  *:8001                     *:*
 ```
+                 
 
+8. 在客户端部署filebeat，发送文件日志到logstash8001  
 
-8. 部署filebeat，发送文件日志到logstash8001     
-为了避免filebeat无权限读取日志文件，建议以root身份启动filebeat      
+为了避免filebeat无权限读取日志文件，请为相应的日志文件赋予可读权限      
 
 ```
 #su - root
@@ -335,13 +398,8 @@ LISTEN     0      128        *:8001                     *:*
 #vim filebeat.yml
 ```
 
-
 ```
-以下配置：读取本机的/var/log/nginx/access.log，发送到logstash8001，	
-且标记为document_type: "nginx:access"，这样便于存放到redis的不同list中。
-
 filebeat.prospectors:
-#  index: "filebeat:nginx"
 - input_type: "log"
   document_type: "nginx:access"
   paths:
@@ -352,6 +410,8 @@ output.logstash:
   hosts: ["127.0.0.1:8001"]
 ```
 
+以上配置：读取本机的/var/log/nginx/access.log，发送到logstash 127.0.0.1:8001，  
+且标记为document_type: "nginx:access"，这样便于存放到redis的不同list中。 
 
 启动filebeat    
 
@@ -359,31 +419,34 @@ output.logstash:
 # /elkr/filebeat/filebeat -e -c /elkr/filebeat/filebeat.yml &
 ```
 
-
-连接到redis服务器，查看keys ，能够查询到    
+连接到redis服务器，确认redis工作正常    
 
 ```
-#redis-cli
-127.0.0.1>kyes *
-1)nginx:access
+[root@elk config]# redis-cli 
+127.0.0.1:6379> keys *
+(1) nginx:access
 ```
-表明数据收集与存储到redis正常。 
 
-9. 部署Logstash完成正则匹配，切分日志域 
+标明日志文件成功通过logstash8001端口存储到redis  
+
+9. 部署Logstash完成正则匹配，切分日志域    
+
+
 建立用来存放Grok正则表达式文件的路径    
 
 ```
 #mkdir -p /elkr/ls5.3.2/patterns
 ```
 
-将grok_patterns文件，与自定义pattern文件存放在此目录，以下为自定义nginx access日志正则匹配  
+将grok_patterns文件，与自定义pattern文件存放在此目录  
 
 ```
 #vim /elkr/ls5.3.2/patterns/grok_patterns
 ```
 
-内容见：[grok_patterns]()       
+预定义表达式见：[grok_patterns](https://grokdebug.herokuapp.com/patterns)       
 
+以下为自定义nginx access日志正则匹配  
 ```
 #vim /elkr/ls5.3.2/patterns/nginx-access
 ```
@@ -398,7 +461,7 @@ HOSTPORT1 (%{IPV4}:%{POSINT}[, ]{0,2})+
 YourHostIP-N-ACCESS 与 HOSTPORT1为自定义表达式。	
 为了能够编写匹配不同格式的nginx日志，需要定义不同的名字，所以采用YourHostIP-N-ACCESS这样的命名，后面会用到。	
 HOSTPORT1表达式是为了匹配出 IP: PORT 这类型的数据，仅仅是个人需求。    
-提供一个正则表达式在线调试的网站GrokDebugger，国内访问可能会慢。	
+一个正则表达式在线调试的网站GrokDebugger，国内访问可能会慢。	
 [Grok Debugger](http://grokdebug.herokuapp.com/)
 ```
 #vim  /elkr/ls5.3.2/config/redis2es.conf
@@ -447,11 +510,25 @@ output {
 }
 ```
 
-配置文件一共分三段：从Redis输入，Grok匹配过滤，输出到ES，具体语法请参照Logstash官方手册      
+配置文件一共分三段：
+
+- 从Redis输入
+- Grok匹配过滤
+- 输出到ES
+
+具体语法请参照Logstash官方手册      
 
 10. Kibana展现  
-10.1. 访问http://IP，输入上面设置的htpasswd的用户名密码登录。   
-10.2. 【可选】为了个人需求，我修改了一下模版    
+
+访问http://IP   输入上面设置的htpasswd的用户名密码登录。  
+
+```
+http://localhost
+```
+
+
+【可选】为了个人需求，我修改了一下模版      
+
 点击左边菜单开发工具，运行如下代码，将所有字段与他的raw数据都保留。     
 
 ```
@@ -539,7 +616,9 @@ PUT _template/all-string-with-raw
   }
 ```
 
-10.3. 点击左边菜单Management->Index Patterns-> Configure an index pattern-> 	
+创建indices
+
+  点击左边菜单Management->Index Patterns-> Configure an index pattern-> 	
 Index name or pattern处输入第9步配置文件    
 
 ```
@@ -547,8 +626,11 @@ index => "nginx-access-%{+YYYY.MM.dd}"
 ```
 中的index名，如我的例子中就应该是nginx-access-\*，因为索引会按天创建，所以请保留末尾的*。   
 
-10.4. 左边菜单Discover为定义的Index Pattern的展现，也是后面Visualize的数据基础，	
-Visualize做出的图表，通过Dashboard展现。这样就完成了Kibana的视图设置，Kibana支持多种格式统计图表，可以深入挖掘使用。  
+创建Visualize、Dashboard
+
+  左边菜单Discover为定义的Index Pattern的展现，也是后面Visualize的数据基础，	
+Visualize做出的图表，通过Dashboard展现。这样就完成了Kibana的视图设置，Kibana支持多种格式统计图表，可以深入挖掘使用。 
+
 
 至此ELKR STACK搭建完毕。    
 其中耗时的地方在于正则表达式匹配日志。  
@@ -559,9 +641,39 @@ Visualize做出的图表，通过Dashboard展现。这样就完成了Kibana的�
 [Elastic.co文档](https://www.elastic.co/guide/index.html)
 ###  六、踩过的坑       
 慢慢总结、细细品尝
-- 1
-- 2
-- 3
+
+1. 强制掉电/ES索引坏了
+
+那天我脑袋抽了，直接reboot了
+
+系统起来以后启动ES发现有问题了。
+```
+log   [14:27:08.487] [error][status][plugin:elasticsearch@1.0.0] Status changed from red to red - Elasticsearch is still initializing the kibana index.
+```
+
+而且等了很久一直不能用，Google了一下，参照这个[问题](http://stackoverflow.com/questions/31201051/elasticsearch-is-still-initializing-the-kibana-index)，里面提到了两种解决方案。
+
+A. 解决方案一，不用删除索引
+```
+curl -s http://localhost:9200/.kibana/_recovery?pretty
+curl -XPUT 'localhost:9200/.kibana/_settings' -d '
+{
+    "index" : {
+        "number_of_replicas" : 0
+    }
+}'
+```
+
+亲测无效
+
+B. 删除kibana索引，这样所有建立的visualize和Dashboard都没有了，甚至要删除所有索引
+
+```
+curl -XDELETE http://localhost:9200/.kibana
+curl -XDELETE http://localhost:9200/*
+```
+
+那么你猜我索引有没有删除 :hear_no_evil:
 
 </font>
 
