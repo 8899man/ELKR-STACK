@@ -120,4 +120,7 @@ node-1.1.1.2 工作在Client模式（i），其余两个工作在MASTER与DATA�
 #### 至此，ES集群配置部分完毕。
 
 
+##### TODO 2017-05-17
 
+ES的9200端口对外开放，没有设定有效的访问控制。
+计划通过iptables保护 ，[戳这里传送](https://github.com/n3uz/ELKR-STACK/blob/master/%E4%BF%9D%E6%8A%A4ES%E7%9A%84iptables%E7%AD%96%E7%95%A5.md)
