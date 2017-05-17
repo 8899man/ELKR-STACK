@@ -192,6 +192,7 @@ redis-cli
 验证Redis安装配置成功
 
 4. 部署ES   
+单机部署方案 | [集群部署方案](https://github.com/n3uz/ELKR-STACK/blob/master/ES%E9%9B%86%E7%BE%A4%E9%85%8D%E7%BD%AE.md)
 
 ```bash
 unzip elasticsearch-5.3.2.zip
