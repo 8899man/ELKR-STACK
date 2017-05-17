@@ -13,7 +13,7 @@ ELKR Stack 日志监控平台
 - Logstash 监听0.0.0.0:8001 #负责接收各个Beat发送的数据   
 - Kibana 监听127.0.0.1:5601 #本地监听，不安装x-pack   
 - Redis 监听127.0.0.1:6379  #因为不需要对外开放，可以不设置认证   
-- ES 监听127.0.0.1:9200  #集群节点先配置一个，后期再扩展成集群方式    
+- ES 监听127.0.0.1:9200  #集群节点先配置一个，后期再扩展成集群方式  [集群部署方案](https://github.com/n3uz/ELKR-STACK/blob/master/ES%E9%9B%86%E7%BE%A4%E9%85%8D%E7%BD%AE.md)   
 
 对外统一提供Logstash监听的8001端口，用于接收各个Agent收集上来的日志。多加个logstash在前面监听8001，是把Redis保护起来，你设置个密码访问Redis吧，又得在收集日志的客户端配置上redis的访问密码，容易泄漏。Redis负责中转，再交给Logstash做正则匹配，最后存储到ES集群，Kibana做分析统计展现。Nginx反向代理Kibana。
 
