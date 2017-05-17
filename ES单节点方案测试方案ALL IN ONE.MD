@@ -1,13 +1,7 @@
-<font face="微软雅黑"> 
+#####  ES 单节点测试环境 ALL IN ONE
 
-## 《ELKR STACK从入门到放弃》   
-ELKR Stack 日志监控平台     
- ![image](https://raw.githubusercontent.com/n3uz/elkr-stack/master/kibana.jpg)
-### 一、背景        
-日志多，零散。统一集中分析，挖掘攻击事件。自己去编吧
+![image](https://github.com/n3uz/ELKR-STACK/blob/master/ELKR%E6%9E%B6%E6%9E%84%E5%9B%BE%EF%BC%88ES%E5%8D%95%E8%8A%82%E7%82%B9%EF%BC%89.png) 
 
-###  二、架构与流程     
-![image](https://github.com/n3uz/elkr-stack/blob/master/ELKR%E6%9E%B6%E6%9E%84%E5%9B%BE%E4%B8%8E%E6%B5%81%E7%A8%8B.png?raw=true) 
 
 - Nginx 监听0.0.0.0 80 #配置htpasswd身份认证方式  
 - Logstash 监听0.0.0.0:8001 #负责接收各个Beat发送的数据   
@@ -15,17 +9,10 @@ ELKR Stack 日志监控平台
 - Redis 监听127.0.0.1:6379  #因为不需要对外开放，可以不设置认证   
 - ES 监听127.0.0.1:9200  #集群节点先配置一个，后期再扩展成集群方式    
 
-对外统一提供Logstash监听的8001端口，用于接收各个Agent收集上来的日志。多加个logstash在前面监听8001，是把Redis保护起来，你设置个密码访问Redis吧，又得在收集日志的客户端配置上redis的访问密码，容易泄漏。Redis负责中转，再交给Logstash做正则匹配，最后存储到ES集群，Kibana做分析统计展现。Nginx反向代理Kibana。
-
-###  三、测试环境方案     
+除各种beat外，其余所有组件都安装在同一虚拟机里。对外统一提供Logstash监听的8001端口，用于接收各个Agent收集上来的日志。多加个logstash在前面监听8001，是把Redis保护起来，你设置个密码访问Redis吧，又得在收集日志的客户端配置上redis的访问密码，容易泄漏。Redis负责中转，再交给Logstash做正则匹配，最后存储到ES集群，Kibana做分析统计展现。Nginx反向代理Kibana。
 
 
-因为网络环境复杂，下载ELK介质的速度又不行，我把个人收集的介质上传，请对比HASH合理食用。	
-我建议如果是想做实验，有美利坚的VPS 1000M网络共享，下载速度感动到你哭。	
-而且也支持在线安装各种插件。这个你在大TC想都不敢想。
-
-### 四、实施方案        
-1. 检查介质清单    
+#### 1. 检查介质清单    
 
   - CentOS Linux release 7.1.1503 (Core)或其他    
   - jdk1.8    
@@ -43,7 +30,7 @@ ELKR Stack 日志监控平台
 mkdir -p /elkr/ 
 ```
     
-2. 部署工作环境，调优系统参数       
+####  2. 部署工作环境，调优系统参数       
 
 ```bash
 yum -y install gcc tcl
@@ -91,7 +78,7 @@ ulimit -SHu 65535
 ```
 
 
-3. 安装redis3.2.6版本为例   
+####  3. 安装redis3.2.6版本为例   
 
 ```bash
 tar zxvf redis3.2.6.tar.gz
@@ -187,9 +174,7 @@ redis-cli
 
 验证Redis安装配置成功
 
-4. 部署ES   
-
-单机部署方案 | [集群部署方案](https://github.com/n3uz/ELKR-STACK/blob/master/ES%E9%9B%86%E7%BE%A4%E9%85%8D%E7%BD%AE.md) 
+####  4. 部署ES   
 
 ```bash
 unzip elasticsearch-5.3.2.zip
@@ -243,7 +228,7 @@ vi jvm.options
 ```
 
 
-5. 部署Kibana   
+####  5. 部署Kibana   
 
 ```bash
 tar zxvf kibana-5.3.2-linux-x86_64.tar.gz
@@ -284,7 +269,7 @@ netstat -an|grep 5601
 ```
 
 
-6. 安装nginx配置代理
+#### 6. 安装nginx配置代理
 在线yum安装nginx
 
 ```bash
@@ -339,7 +324,7 @@ nginx
 
 访问http://IP，输入上面设置的htpasswd的用户名密码登录，测试正常。   
 
-7. 部署Logstash 监听8001端口，用于接收日志，并转发到redis
+#### 7. 部署Logstash 监听8001端口，用于接收日志，并转发到redis
 
 ```bash
 tar zxvf logstash-5.3.2.tar.gz
@@ -355,19 +340,19 @@ vim config/conf-8001.conf
 
 ```
 input {
-	beats {
-		port => 8001
-	}
+    beats {
+        port => 8001
+    }
 }
 output {
 if [type]=="nginx:access" { 
 #type区分开不同主机的不同日志
 #type的设置将会从filebeat处增加一个字段
       redis {
-		host => "127.0.0.1"
-		key => "nginx:access" #不同来源的数据存放到不同list里
-		port => 6379
-		data_type => "list"
+        host => "127.0.0.1"
+        key => "nginx:access" #不同来源的数据存放到不同list里
+        port => 6379
+        data_type => "list"
       }
     }
 }
@@ -388,7 +373,7 @@ LISTEN     0      128  *:8001                     *:*
 ```
                  
 
-8. 在客户端部署filebeat，发送文件日志到logstash8001  
+#### 8. 在客户端部署filebeat，发送文件日志到logstash8001  
 
 为了避免filebeat无权限读取日志文件，请为相应的日志文件赋予可读权限      
 
@@ -430,7 +415,7 @@ output.logstash:
 
 标明日志文件成功通过logstash8001端口存储到redis  
 
-9. 部署Logstash完成正则匹配，切分日志域    
+#### 9. 部署Logstash完成正则匹配，切分日志域    
 
 
 建立用来存放Grok正则表达式文件的路径    
@@ -459,10 +444,10 @@ HOSTPORT1 (%{IPV4}:%{POSINT}[, ]{0,2})+
 ```
 
 
-YourHostIP-N-ACCESS 与 HOSTPORT1为自定义表达式。	
-为了能够编写匹配不同格式的nginx日志，需要定义不同的名字，所以采用YourHostIP-N-ACCESS这样的命名，后面会用到。	
+YourHostIP-N-ACCESS 与 HOSTPORT1为自定义表达式。 
+为了能够编写匹配不同格式的nginx日志，需要定义不同的名字，所以采用YourHostIP-N-ACCESS这样的命名，后面会用到。  
 HOSTPORT1表达式是为了匹配出 IP: PORT 这类型的数据，仅仅是个人需求。    
-一个正则表达式在线调试的网站GrokDebugger，国内访问可能会慢。	
+一个正则表达式在线调试的网站GrokDebugger，国内访问可能会慢。    
 [Grok Debugger](http://grokdebug.herokuapp.com/)
 ```
 vim  /elkr/ls5.3.2/config/redis2es.conf
@@ -471,21 +456,21 @@ vim  /elkr/ls5.3.2/config/redis2es.conf
 
 ```
 input {
-	 redis {
+     redis {
                 host => "127.0.0.1"
-      		key => "nginx:access"
-          	port => 6379
-          	data_type => "list"
-          	
+            key => "nginx:access"
+            port => 6379
+            data_type => "list"
+            
           }
 
 }
 filter {
   if [type] == "nginx:access" {
     grok {
-	    patterns_dir => "/elkr/ls5.3.2/patterns"
-	    match => [ 
-	        "message","%{YourHostIP-N-ACCESS}"]
+        patterns_dir => "/elkr/ls5.3.2/patterns"
+        match => [ 
+            "message","%{YourHostIP-N-ACCESS}"]
     }
 
     if "_grokparsefailure" in [tags] {
@@ -519,7 +504,7 @@ output {
 
 具体语法请参照Logstash官方手册      
 
-10. Kibana展现  
+#### 10. Kibana展现  
 
 访问http://IP   输入上面设置的htpasswd的用户名密码登录。  
 
@@ -619,7 +604,7 @@ PUT _template/all-string-with-raw
 
 创建indices
 
-  点击左边菜单Management->Index Patterns-> Configure an index pattern-> 	
+  点击左边菜单Management->Index Patterns-> Configure an index pattern->   
 Index name or pattern处输入第9步配置文件    
 
 ```
@@ -629,7 +614,7 @@ index => "nginx-access-%{+YYYY.MM.dd}"
 
 创建Visualize、Dashboard
 
-  左边菜单Discover为定义的Index Pattern的展现，也是后面Visualize的数据基础，	
+  左边菜单Discover为定义的Index Pattern的展现，也是后面Visualize的数据基础，  
 Visualize做出的图表，通过Dashboard展现。这样就完成了Kibana的视图设置，Kibana支持多种格式统计图表，可以深入挖掘使用。 
 
 
@@ -638,50 +623,5 @@ Visualize做出的图表，通过Dashboard展现。这样就完成了Kibana的�
 恰好性能瓶颈也很大程度上会出在这里，可以考虑加入行处理的工具来规避大数据量下的Grok效率低的问题。    
 
 
-###  五、参考手册      
+###  * 参考手册      
 [Elastic.co文档](https://www.elastic.co/guide/index.html)
-###  六、踩过的坑       
-慢慢总结、细细品尝
-
-1. 强制掉电/ES索引坏了
-
-那天我脑袋抽了，直接reboot了
-
-系统起来以后启动ES发现有问题了。
-```
-log   [14:27:08.487] [error][status][plugin:elasticsearch@1.0.0] Status changed from red to red - Elasticsearch is still initializing the kibana index.
-```
-
-而且等了很久一直不能用，Google了一下，参照这个[问题](http://stackoverflow.com/questions/31201051/elasticsearch-is-still-initializing-the-kibana-index)，里面提到了两种解决方案。
-
-A. 解决方案一，不用删除索引
-```
-curl -s http://localhost:9200/.kibana/_recovery?pretty
-curl -XPUT 'localhost:9200/.kibana/_settings' -d '
-{
-    "index" : {
-        "number_of_replicas" : 0
-    }
-}'
-```
-
-亲测无效
-
-B. 删除kibana索引，这样所有建立的visualize和Dashboard都没有了，甚至要删除所有索引
-
-```
-curl -XDELETE http://localhost:9200/.kibana
-curl -XDELETE http://localhost:9200/*
-```
-
-那么你猜我索引有没有删除 :hear_no_evil:
-
-2. logstash grok并没有你想的那么高效
-
-在处理单条日志内容过大时，我的大概2k，grok的效率简直不能忍，新手又没有其他姿势来切分匹配。朋友建议说使用其他的行处理工具，这里还要埋个坑
-
-3. 待发现
-
-
-</font>
-
