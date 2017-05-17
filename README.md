@@ -340,7 +340,7 @@ nginx -t
 nginx
 ```
 
-访问http://IP，输入上面设置的htpasswd的用户名密码登录，测试正常。   
+访问http://IP 输入上面设置的htpasswd的用户名密码登录，测试正常。   
 
 7. 部署Logstash 监听8001端口，用于接收日志，并转发到redis
 
