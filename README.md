@@ -30,7 +30,7 @@ output {
         }
     }
 ```
-在网上找到的资料很多都这么写的，index => "nginx-access-%{+YYYY.MM.dd}"，为每天生成一个indice，但是一旦拥有了几千个indices的时候，重启ES，一直提示在恢复索引。你会看到提示：
+在网上找到的资料很多都这么写的，index => "nginx-access-%{+YYYY.MM.dd}"，为每天生成一个indice，但是一旦拥有了几千上万个indices的时候，重启ES，一直提示在恢复索引。你会看到提示：
 ```
 {"name":"Kibana","hostname":"ABCD","pid":3848,"level":30,"msg":"Elasticsearch is still initializing the kibana index... Trying again in 2.5 second.","time":"2017-05-03T07:35:34.936Z","v":0}
 
@@ -47,6 +47,6 @@ curl -XDELETE http://localhost:9200/*
 index => "nginx-access-%{+YYYY}"
 index => "nginx-access-%{+YYYY.MM}"
 ```
-这个问题不知道怎么解决，所以只能这样规避
+这个问题不知道怎么解决，所以只能这样规避。
 
 </font>
