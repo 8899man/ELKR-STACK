@@ -347,8 +347,8 @@ input {
 output {
 if [type]=="nginx:access" { 
 #type区分开不同主机的不同日志
-#type的设置将会从filebeat处增加一个字段
-      redis {
+#type是在filebeat客户端增加的一个字段[1]
+      redis {
         host => "127.0.0.1"
         key => "nginx:access" #不同来源的数据存放到不同list里
         port => 6379
@@ -362,7 +362,7 @@ if [type]=="nginx:access" {
 启动logstash    
 
 ```bash
-nohup /elkr/ls5.3.2/bin/logstash -f /elkr/ls5.3.2/config/filebeat.conf -l /elkr/ls5.3.2/log/filebeat/ &
+nohup /elkr/ls5.3.2/bin/logstash -f /elkr/ls5.3.2/config/conf-8001.conf -l /elkr/ls5.3.2/log/filebeat/ &
 ```
 
 查看启动日志与端口，确认启动正常。  
@@ -387,8 +387,8 @@ vim filebeat.yml
 ```
 filebeat.prospectors:
 - input_type: "log"
-  document_type: "nginx:access"
-  paths:
+  document_type: "nginx:access" #上文[1]的type
+  paths:
     - /var/log/nginx/access.log
     #- c:\programdata\elasticsearch\logs\*
 
