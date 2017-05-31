@@ -35,7 +35,7 @@ output {
 {"name":"Kibana","hostname":"ABCD","pid":3848,"level":30,"msg":"Elasticsearch is still initializing the kibana index... Trying again in 2.5 second.","time":"2017-05-03T07:35:34.936Z","v":0}
 
 ```
-目前没有找到更好的解决方案，网上找到的资料都是`删除所有indices`
+目前没有找到更好的解决方案，网上找到的资料都是<font face="微软雅黑" color=red> 删除所有indices</font>
 ```
 curl -XDELETE http://localhost:9200/*
 ```
