@@ -49,4 +49,39 @@ index => "nginx-access-%{+YYYY.MM}"
 ```
 这个问题不知道怎么解决，所以只能这样规避。
 
+
+
+介质清单 [百度网盘下载地址]() TODO
+```
+C:\Users\z>tree E:\介质 /f
+
+│  elasticsearch-5.3.2.zip
+│  jdk-8u45-linux-x64.tar.gz
+│  kibana-5.3.2-linux-x86_64.tar.gz
+│  logstash-5.3.2.tar.gz
+│  redis-3.2.6.tar.gz
+│
+├─filebeat
+│      filebeat-5.3.2-linux-x86.tar.gz
+│      filebeat-5.3.2-linux-x86_64.tar.gz
+│      filebeat-5.3.2-windows-x86.zip
+│      filebeat-5.3.2-windows-x86_64.zip
+│      filebeat-5.3.2-x86_64.rpm
+│
+├─packetbeat
+│      packetbeat-5.3.2-amd64.deb
+│      packetbeat-5.3.2-i386.deb
+│      packetbeat-5.3.2-i686.rpm
+│      packetbeat-5.3.2-linux-x86.tar.gz
+│      packetbeat-5.3.2-linux-x86_64.tar.gz
+│      packetbeat-5.3.2-windows-x86.zip
+│      packetbeat-5.3.2-windows-x86_64.zip
+│      packetbeat-5.3.2-x86_64.rpm
+│
+└─winlogbeat
+        winlogbeat-5.3.2-windows-x86.zip
+        winlogbeat-5.3.2-windows-x86_64.zip
+
+```
+
 </font>
