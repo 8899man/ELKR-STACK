@@ -47,5 +47,6 @@ curl -XDELETE http://localhost:9200/*
 index => "nginx-access-%{+YYYY}"
 index => "nginx-access-%{+YYYY.MM}"
 ```
+这个问题不知道怎么解决，所以只能这样规避
 
 </font>
