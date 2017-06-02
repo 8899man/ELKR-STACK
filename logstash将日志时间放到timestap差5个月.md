@@ -60,7 +60,7 @@ match => ["cmdtime","YYYY-MM-DD HH:mm:ss"]
 
 正确的应该是
 ```
-match => ["cmdtime","YYYY-MM-dd HH:mm:ss"]
+match => ["cmdtime","yyyy-MM-dd HH:mm:ss"]
 ```
 正确替换后，差8个小时无所谓，kibana会自动解决时区问题。
 ```
