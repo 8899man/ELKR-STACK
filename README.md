@@ -21,6 +21,7 @@ ELKR Stack 日志监控平台
 
 #### 	&lambda;. 这个问题必须拿在这里来说
 
+单节点ES情况下
 ```
 output {
     if [type] == "nginx:access" {
