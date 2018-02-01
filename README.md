@@ -15,7 +15,7 @@ ELKR Stack 日志监控平台
 
 #### 	&lambda;. ES 生产环境集群模式
 
-[ES Cluster 生产环境部署方案](https://github.com/n3uz/ELKR-STACK/blob/master/ES%E9%9B%86%E7%BE%A4%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E6%96%B9%E6%A1%88.md)
+[ES Cluster 生产环境部署方案](https://github.com/n3uz/ELKR-STACK/blob/master/ES%E9%9B%86%E7%BE%A4%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E6%96%B9%E6%A1%88.MD)
 
 ![ELKR ES集群架构](https://github.com/n3uz/ELKR-STACK/blob/master/ELKR%E6%9E%B6%E6%9E%84%E5%9B%BE%EF%BC%88ES%E9%9B%86%E7%BE%A4%EF%BC%89.png)
 
